@@ -40,6 +40,7 @@ namespace Assignment_1
 4. Return To Main Menu
 
 Enter an option: ");
+                
                 while (!Int32.TryParse(Console.ReadLine(), out choise))
                 {
                     Global.PrintInvalidInputErrorMSG();
@@ -47,12 +48,29 @@ Enter an option: ");
                 switch (choise)
                 {
                     case 1:
-                        GetInventory();
+                        GetInventory(-1);
                         Console.Write("Press any key to Continue: ");
-                        Console.Read();
+                        Console.ReadKey();
                         break;
                     case 2:
-                        FranchiseHolder.FranchiseHolderMenu();
+                        int threshold,StockID=0;
+                        Console.Write("Enter threshold for re-stocking: ");
+                        while (!Int32.TryParse(Console.ReadLine(), out threshold))
+                        {
+                            Global.PrintInvalidInputErrorMSG();
+                        }
+                        if (!GetInventory(threshold))
+                        {
+                            break;
+                        }
+                        string op;
+                        Console.Write("Enter request to Process: ");
+                        while ((!Int32.TryParse(Console.ReadLine(), out StockID)) || ((op = RequestStock(threshold, StockID, StoreID)).Equals("Not Valid Input. Try Again")))
+                        {                            
+                                Global.PrintInvalidInputErrorMSG();                           
+                        }
+                        Console.Write(op+"\nPress any key to Continue: ");
+                        Console.ReadKey();
                         break;
                     case 3:
                         Customer.CustomerMenu();
@@ -70,7 +88,39 @@ Enter an option: ");
 
         }
 
-        private static void GetInventory()
+        private static string RequestStock(int threshold, int StockID,int StoreID)
+        {
+            SqlCommand sqlCommand = new SqlCommand();
+            SqlDataAdapter sqlDataAdapter = new SqlDataAdapter();
+            DataSet dataSet = new DataSet();
+            DataTable table = new DataTable();
+            try
+            {
+
+                sqlCommand = new SqlCommand("requestStock", Global.sqlConnection);
+                Global.sqlConnection.Open();
+                sqlCommand.Parameters.Add(new SqlParameter("@StoreID", StoreID));
+                sqlCommand.Parameters.Add(new SqlParameter("@StockID", StockID));
+                sqlCommand.Parameters.Add(new SqlParameter("@threshold", threshold));
+                sqlCommand.Parameters.Add(new SqlParameter("@result", SqlDbType.NVarChar, 30)).Direction = ParameterDirection.Output;
+                sqlCommand.CommandType = CommandType.StoredProcedure;
+                sqlDataAdapter.SelectCommand = sqlCommand;
+                sqlDataAdapter.Fill(table);
+                return sqlCommand.Parameters["@result"].Value.ToString();
+            }
+            catch (Exception x)
+            {
+                Console.WriteLine(x);
+                return ("Not Valid Input. Try Again");
+            }
+            finally
+            {
+                sqlCommand.Dispose();
+                Global.sqlConnection.Close();
+            }
+        }
+
+        private static Boolean GetInventory(int threshold)
         {
             SqlCommand sqlCommand = new SqlCommand();
             SqlDataAdapter sqlDataAdapter = new SqlDataAdapter();
@@ -81,6 +131,7 @@ Enter an option: ");
                 sqlCommand = new SqlCommand("getInventory", Global.sqlConnection);
                 Global.sqlConnection.Open();
                 sqlCommand.Parameters.Add(new SqlParameter("@StoreID", StoreID));
+                sqlCommand.Parameters.Add(new SqlParameter("@threshold", threshold));
                 sqlCommand.CommandType = CommandType.StoredProcedure;
                 sqlDataAdapter.SelectCommand = sqlCommand;
                 sqlDataAdapter.Fill(table);
@@ -89,20 +140,33 @@ Enter an option: ");
             {
                 Console.WriteLine(x);
                 Global.PrintInvalidInputErrorMSG();
+                return true;
             }
             finally
             {
                 sqlCommand.Dispose();
                 Global.sqlConnection.Close();
             }
-            Console.WriteLine("Inventory");
-            Console.WriteLine("ID     Product                        CurrentStock");
-            foreach (DataRow row in table.Rows)
+            if (table.Rows.Count <=0)
             {
-                Console.WriteLine(" {0,-5} {1,-30} {2,-11}",
-                                              row["ID"],
-                                              row["Product"],
-                                              row["Current Stock"]);
+                if (threshold != -1)
+                    Console.WriteLine("All invnetory stock levels are equal to or above " + threshold);
+                else
+                    Console.WriteLine("No Inventory to Display.");
+                return false;
+            }
+            else
+            {
+                Console.WriteLine("Inventory");
+                Console.WriteLine("ID     Product                        CurrentStock");
+                foreach (DataRow row in table.Rows)
+                {
+                    Console.WriteLine(" {0,-5} {1,-30} {2,-11}",
+                                                  row["ID"],
+                                                  row["Product"],
+                                                  row["Current Stock"]);
+                }
+                return true;
             }
         }
 
