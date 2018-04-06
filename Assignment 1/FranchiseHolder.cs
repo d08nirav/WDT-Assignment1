@@ -175,7 +175,7 @@ Enter an option: ");
             throw new NotImplementedException();
         }
 
-        private static string GetStoreName(int choise)
+        internal static string GetStoreName(int choise)
         {
             SqlCommand sqlCommand = new SqlCommand();
             SqlDataAdapter sqlDataAdapter = new SqlDataAdapter();
@@ -205,7 +205,7 @@ Enter an option: ");
             }
         }
 
-        private static void GetStores()
+        internal static void GetStores()
         {
             SqlCommand sqlCommand = new SqlCommand();
             SqlDataAdapter sqlDataAdapter = new SqlDataAdapter();
