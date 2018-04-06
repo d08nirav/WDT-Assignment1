@@ -140,7 +140,7 @@ Enter an option: ");
         {
             int choise = 0;
             GetStockRequest();            
-            Console.WriteLine("\nEnter an option: ");
+            Console.Write("\nEnter an option: ");
             while (!Int32.TryParse(Console.ReadLine(), out choise))
             {
                 Global.PrintInvalidInputErrorMSG();
@@ -160,10 +160,14 @@ Enter an option: ");
                 sqlCommand = new SqlCommand("processStockRequest", Global.sqlConnection);
                 Global.sqlConnection.Open();
                 sqlCommand.Parameters.Add(new SqlParameter("@StockRequestID", choise));
+                sqlCommand.Parameters.Add(new SqlParameter("@result", SqlDbType.NVarChar, 100)).Direction = ParameterDirection.Output;
                 sqlCommand.CommandType = CommandType.StoredProcedure;
                 sqlDataAdapter.SelectCommand = sqlCommand;
                 //sqlDataAdapter.
                 sqlDataAdapter.Fill(table);
+                Console.WriteLine(sqlCommand.Parameters["@result"].Value.ToString());
+                Console.Write("Press any key to Continue: ");
+                Console.ReadKey();
             }
             catch (Exception x)
             {
@@ -188,7 +192,6 @@ Enter an option: ");
 
                 sqlCommand = new SqlCommand("getStockRequest", Global.sqlConnection);
                 Global.sqlConnection.Open();
-                //cmd.Parameters.Add(new SqlParameter("@EMPLOYEENO", employeeNo));
                 sqlCommand.CommandType = CommandType.StoredProcedure;
                 sqlDataAdapter.SelectCommand = sqlCommand;
                 sqlDataAdapter.Fill(table);
@@ -204,10 +207,10 @@ Enter an option: ");
                 Global.sqlConnection.Close();
             }
             Console.WriteLine("Stock Reqqust");
-            Console.WriteLine("ID \tStore \t\t\tProduct \t\tQuantity \tCurrentStock \tStockAvailability");
+            Console.WriteLine("ID \tStore \t\t     Product \t\t     Quantity \tCurrentStock   \t StockAvailability");
             foreach (DataRow row in table.Rows)
             {
-                Console.WriteLine("{0} \t{1} \t\t{2} \t\t\t{3} \t\t{4} \t\t{5}",
+                Console.WriteLine("{0,-7} {1,-20} {2,-23} {3,-10} {4,-12}     {5,-20}",
                                               row["ID"],
                                               row["Store"],
                                               row["Product"],
