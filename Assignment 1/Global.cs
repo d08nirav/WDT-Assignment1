@@ -15,7 +15,7 @@ namespace Assignment_1
 
         public static void PrintInvalidInputErrorMSG()
         {
-            Console.WriteLine("\nNot Valid Input. Try Again");
+            Console.Write("Not Valid Input. Try Again: ");
         }
         public static void GetInput(int choise)
         {

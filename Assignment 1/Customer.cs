@@ -13,13 +13,17 @@ namespace Assignment_1
             Console.Clear();
             Console.WriteLine("Stores");
             FranchiseHolder.GetStores();
+            string inp;
             while (storeName.Equals("Not Valid Input. Try Again"))
             {
                 Console.Write("Enter the Store to use: ");
-                if (Int32.TryParse(Console.ReadLine(), out StoreID))
+                if (Int32.TryParse(inp = Console.ReadLine(), out StoreID))
                 {
+
                     storeName = FranchiseHolder.GetStoreName(StoreID);
                 }
+                else if (inp == "")
+                    return;
                 if (storeName.Equals("Not Valid Input. Try Again"))
                     Global.PrintInvalidInputErrorMSG();
             }
@@ -47,8 +51,6 @@ Enter an option: ");
                 {
                     case 1:
                         GetInventory();
-                        ///Console.Write("Press any key to Continue: ");
-                        //Console.ReadKey();
                         break;
                     case 2:
                         StoreID = 0;

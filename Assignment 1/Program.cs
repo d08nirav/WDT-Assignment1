@@ -54,6 +54,7 @@ namespace Assignment_1
 
         private static void PrintMainMenu()
         {
+            Console.Clear();
             Console.WriteLine("Welcome to Marvelous Magic");
             Console.WriteLine("==========================");
             Console.WriteLine("1. Owner");

@@ -12,14 +12,18 @@ namespace Assignment_1
         { 
             Console.Clear();
             Console.WriteLine("Stores");
-            GetStores();            
+            GetStores();
+            string inp;
             while (storeName.Equals("Not Valid Input. Try Again"))
             {
                 Console.Write("Enter the Store to use: ");
-                if (Int32.TryParse(Console.ReadLine(), out StoreID))
+                if (Int32.TryParse(inp = Console.ReadLine(), out StoreID))
                 {
-                    storeName = GetStoreName(StoreID);
+
+                    storeName = FranchiseHolder.GetStoreName(StoreID);
                 }
+                else if (inp == "")
+                    return;
                 if (storeName.Equals("Not Valid Input. Try Again"))
                     Global.PrintInvalidInputErrorMSG();
             }
@@ -31,6 +35,7 @@ namespace Assignment_1
             int choise =0;
             while (choise != 4)
             {
+                Console.Clear();
                 Console.Write(
     "\nWelcome to Marvelous Magic (Franchise Holder - " + storeName + ")\n" +
 @"==========================
@@ -40,9 +45,11 @@ namespace Assignment_1
 4. Return To Main Menu
 
 Enter an option: ");
-                
-                while (!Int32.TryParse(Console.ReadLine(), out choise))
+                string inp;
+                while (!Int32.TryParse(inp = Console.ReadLine(), out choise))
                 {
+                    if (inp == "")
+                        return;
                     Global.PrintInvalidInputErrorMSG();
                 }
                 switch (choise)
@@ -53,27 +60,10 @@ Enter an option: ");
                         Console.ReadKey();
                         break;
                     case 2:
-                        int threshold,StockID=0;
-                        Console.Write("Enter threshold for re-stocking: ");
-                        while (!Int32.TryParse(Console.ReadLine(), out threshold))
-                        {
-                            Global.PrintInvalidInputErrorMSG();
-                        }
-                        if (!GetInventory(threshold))
-                        {
-                            break;
-                        }
-                        string op;
-                        Console.Write("Enter request to Process: ");
-                        while ((!Int32.TryParse(Console.ReadLine(), out StockID)) || ((op = RequestStock(threshold, StockID, StoreID)).Equals("Not Valid Input. Try Again")))
-                        {                            
-                                Global.PrintInvalidInputErrorMSG();                           
-                        }
-                        Console.Write(op+"\nPress any key to Continue: ");
-                        Console.ReadKey();
+                        PrintStockRequest();
                         break;
                     case 3:
-                        Customer.CustomerMenu();
+                        PrintNewInventory();
                         break;
                     case 4:
                         StoreID = 0;
@@ -86,6 +76,153 @@ Enter an option: ");
 
             }
 
+        }
+
+        private static void PrintStockRequest()
+        {
+            int threshold, StockID = 0;
+            Console.Write("Enter threshold for re-stocking: ");
+            string inp;
+            while (!Int32.TryParse(inp = Console.ReadLine(), out threshold))
+            {
+                if (inp == "")
+                    return;
+                Global.PrintInvalidInputErrorMSG();
+            }
+            if (!GetInventory(threshold))
+            {
+                return;
+            }
+            string op;
+            Console.Write("Enter request to Process: ");
+            while ((!Int32.TryParse(inp =Console.ReadLine(), out StockID)) || ((op = RequestStock(threshold, StockID, StoreID)).Equals("Not Valid Input. Try Again")))
+            {
+                if (inp == "")
+                    return;
+                Global.PrintInvalidInputErrorMSG();
+            }
+            Console.Write(op + "\nPress any key to Continue: ");
+            Console.ReadKey();
+        }
+
+        private static void PrintNewInventory()
+        {
+            if (!GetNewInventory())
+            {
+                Console.Write("Press any key to Continue: ");
+                Console.ReadKey();
+                return;
+            }
+            Console.Write("Enter Product to add: ");
+            int choise = 0;
+            string inp;
+            while (!Int32.TryParse(inp = Console.ReadLine(), out choise))
+            {
+                if (inp == "")
+                    return;
+                Global.PrintInvalidInputErrorMSG();
+            }
+            CreateNewInventoryItem(choise);
+        }
+
+        private static void CreateNewInventoryItem(int choise)
+        {
+            SqlCommand sqlCommand = new SqlCommand();
+            SqlDataAdapter sqlDataAdapter = new SqlDataAdapter();
+            DataTable table = new DataTable();
+            try
+            {
+
+                sqlCommand = new SqlCommand("createNewInventoryItem", Global.sqlConnection);
+                Global.sqlConnection.Open();
+                sqlCommand.Parameters.Add(new SqlParameter("@StoreID", StoreID));
+                sqlCommand.Parameters.Add(new SqlParameter("@ProductID", choise));
+                sqlCommand.Parameters.Add(new SqlParameter("@Result", SqlDbType.NVarChar, 50)).Direction = ParameterDirection.Output;
+                sqlCommand.CommandType = CommandType.StoredProcedure;
+                sqlDataAdapter.SelectCommand = sqlCommand;
+                sqlDataAdapter.Fill(table);
+                Console.WriteLine(sqlCommand.Parameters["@Result"].Value.ToString());
+                Console.Write("\nPress Any Key to Continue: ");
+                Console.ReadKey();
+            }
+            catch (Exception x)
+            {
+                Console.WriteLine(x);
+                Global.PrintInvalidInputErrorMSG();
+                // return true;
+            }
+            finally
+            {
+                sqlCommand.Dispose();
+                Global.sqlConnection.Close();
+            }
+            if (table.Rows.Count <= 0)
+            {
+                //if (threshold != -1)
+                //  Console.WriteLine("All invnetory stock levels are equal to or above ");
+                //else
+                Console.WriteLine("No Inventory to Display.");
+                //return false;
+            }
+            else
+            {
+                Console.WriteLine("Inventory");
+                Console.WriteLine("ID     Product                        CurrentStock");
+                foreach (DataRow row in table.Rows)
+                {
+                    Console.WriteLine(" {0,-5} {1,-30} {2,-11}",
+                                                  row["ID"],
+                                                  row["Product"],
+                                                  row["Current Stock"]);
+                }
+                //return true;
+            }
+        }
+
+        private static bool GetNewInventory()
+        {
+            SqlCommand sqlCommand = new SqlCommand();
+            SqlDataAdapter sqlDataAdapter = new SqlDataAdapter();
+            DataTable table = new DataTable();
+            try
+            {
+
+                sqlCommand = new SqlCommand("getNewInventory", Global.sqlConnection);
+                Global.sqlConnection.Open();
+                sqlCommand.Parameters.Add(new SqlParameter("@StoreID", StoreID));
+                sqlCommand.CommandType = CommandType.StoredProcedure;
+                sqlDataAdapter.SelectCommand = sqlCommand;
+                sqlDataAdapter.Fill(table);
+            }
+            catch (Exception x)
+            {
+                Console.WriteLine(x);
+                Global.PrintInvalidInputErrorMSG();
+                return false;
+            }
+            finally
+            {
+                sqlCommand.Dispose();
+                Global.sqlConnection.Close();
+            }
+            if (table.Rows.Count <= 0)
+            {
+                Console.WriteLine("No new product avilable.");
+                return false;
+            }
+            else
+            {
+                Console.WriteLine("Inventory");
+                Console.WriteLine("ID     Product                        CurrentStock");
+                foreach (DataRow row in table.Rows)
+                {
+                    Console.WriteLine(" {0,-5} {1,-30} {2,-11}",
+                                                  row["ID"],
+                                                  row["Product"],
+                                                  row["Current Stock"]);
+                }
+                return true;
+            }
         }
 
         private static string RequestStock(int threshold, int StockID,int StoreID)
@@ -168,12 +305,7 @@ Enter an option: ");
                 }
                 return true;
             }
-        }
-
-        private static void GetInventory(string storeName)
-        {
-            throw new NotImplementedException();
-        }
+        }       
 
         internal static string GetStoreName(int choise)
         {

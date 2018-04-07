@@ -50,10 +50,11 @@ Enter an option: ");
 
         private static void PrintResetStock()
         {
-            int choise = 0;
+            
             Console.WriteLine("\nReset Stock\nProduct Stock will be reset to 20.");
             GetOwnerInventory();
             Console.Write("\nEnter Product ID to reset: ");
+            int choise = 0;
             string inp;
             while (!Int32.TryParse(inp = Console.ReadLine(), out choise))
             {
