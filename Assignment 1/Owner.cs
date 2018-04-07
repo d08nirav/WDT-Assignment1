@@ -54,12 +54,14 @@ Enter an option: ");
             Console.WriteLine("\nReset Stock\nProduct Stock will be reset to 20.");
             GetOwnerInventory();
             Console.Write("\nEnter Product ID to reset: ");
-            while (!Int32.TryParse(Console.ReadLine(), out choise))
+            string inp;
+            while (!Int32.TryParse(inp = Console.ReadLine(), out choise))
             {
+                if (inp == "")
+                    return;
                 Global.PrintInvalidInputErrorMSG();
             }
             ResetStock(choise);
-            Console.ReadKey();
         }
 
         private static void ResetStock(int choise)
@@ -73,13 +75,13 @@ Enter an option: ");
                 sqlCommand = new SqlCommand("resetStock", Global.sqlConnection);
                 Global.sqlConnection.Open();
                 sqlCommand.Parameters.Add(new SqlParameter("@ProductID", choise));
-                sqlCommand.Parameters.Add(new SqlParameter("@Result", SqlDbType.NVarChar,30)).Direction = ParameterDirection.Output;
+                sqlCommand.Parameters.Add(new SqlParameter("@Result", SqlDbType.NVarChar,50)).Direction = ParameterDirection.Output;
                 sqlCommand.CommandType = CommandType.StoredProcedure;
                 sqlDataAdapter.SelectCommand = sqlCommand;
                 sqlDataAdapter.Fill(table);
-                string str = sqlCommand.Parameters["@Result"].Value.ToString();
-
-                Console.WriteLine(str);
+                Console.WriteLine(sqlCommand.Parameters["@Result"].Value.ToString());
+                Console.Write("\nPress Any Key to Continue: ");
+                Console.ReadKey();
             }
             catch (Exception x)
             {
@@ -97,7 +99,7 @@ Enter an option: ");
         {
             Console.WriteLine("\nOwner Inventory");
             GetOwnerInventory();
-            Console.Write("\nPress ANy Key to Continue: ");
+            Console.Write("\nPress Any Key to Continue: ");
             Console.ReadKey();
         }
 
@@ -141,8 +143,11 @@ Enter an option: ");
             int choise = 0;
             GetStockRequest();            
             Console.Write("\nEnter an option: ");
-            while (!Int32.TryParse(Console.ReadLine(), out choise))
+            string inp;            
+            while (!Int32.TryParse(inp = Console.ReadLine(), out choise))
             {
+                if (inp == "")
+                    return;
                 Global.PrintInvalidInputErrorMSG();
             }
             ProcessStockRequest(choise);

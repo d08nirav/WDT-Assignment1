@@ -17,5 +17,16 @@ namespace Assignment_1
         {
             Console.WriteLine("\nNot Valid Input. Try Again");
         }
-    }
+        public static void GetInput(int choise)
+        {
+
+            string inp;
+            while (!Int32.TryParse(inp = Console.ReadLine(), out choise))
+            {
+                if (inp == "")
+                    return;
+                Global.PrintInvalidInputErrorMSG();
+            }
+        }
+}
 }
